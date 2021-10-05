@@ -15,7 +15,7 @@
     - `AnnotationConfigApplicationContext` <- `ApplicationContext` 인터페이스의 구현체
     - 직전에 AppConfig에 @Configuration, @Bean 등을 붙여 설정 클래스로 사용해 스프링 컨테이너를 만든 방식이 이 방식
 
-> #### **cf.**
+> #### **참고**
 > 정확히는 스프링 컨테이너를 부를 때 BeanFactory와 ApplicationContext로 구분한다.<br>
 > BeanFactory를 직접 사용하는 경우는 거의 없어서 보통 ApplicationContext를 스프링 컨테이너라고 한다.<br>
 > BeanFactory <- ApplicationContext <- 기타 유틸성 기능
@@ -48,7 +48,54 @@
     - 설정 정보를 참고하여 객체 간의 의존 관계 주입 (DI)
     <p align="center"><img src="../../images/스프링-빈-의존관계-설정-완료.png" width="80%"></p>
 
-    > #### **cf.**
+    > #### **참고**
     > 사실 지금까지 진행한 것과 같이 자바 코드로 스프링 빈을 등록하게 되면 생성자를 호출하면서 의존 관계 주입까지 한번에 처리<br>
     > 그러나 온전히 스프링을 통해 스프링 빈을 등록하는 경우, 빈을 생성하고 의존관계를 주입하는 단계가 나누어져 있음<br>
     > 자세한 내용은 의존관계 자동 주입 참고
+
+## 4.2 컨테이너에 등록된 모든 빈 조회
+
+### 모든 빈 출력하기
+```Java
+@Test
+@DisplayName("모든 빈 출력하기")
+void findAllBean() {
+    String[] beanDefinitionNames = ac.getBeanDefinitionNames();
+    for(String beanDefinitionName : beanDefinitionNames) {
+        Object bean = ac.getBean(beanDefinitionName);
+        System.out.println("name= " + beanDefinitionName + " object= " + bean);
+    }
+}
+```
+- 스프링에 등록된 모든 빈 정보 출력
+- `ac.getBeanDefinitionNames()` : 스프링에 등록된 모든 빈 이름 조회
+- `ac.getBean()`: 빈 이름으로 빈 객체 조회
+
+### 애플리케이션 빈 출력하기
+```Java
+@Test
+@DisplayName("애플리케이션 빈 출력하기")
+void findApplicationBean() {
+    String[] beanDefinitionNames = ac.getBeanDefinitionNames();
+    for(String beanDefinitionName : beanDefinitionNames) {
+        BeanDefinition beanDefinition = ac.getBeanDefinition(beanDefinitionName);
+        // Role ROLE_APPLICATION : 직접 등록한 애플리케이션 빈
+        // Role ROLE_INFRASTRUCTURE : 스프링이 내부에서 사용하는 빈
+        if(beanDefinition.getRole() == BeanDefinition.ROLE_APPLICATION) {
+        System.out.println("name= " + beanDefinitionName + " object= " + bean);
+        }
+    }
+}
+```
+- 스프링이 내부에서 사용하는 빈은 제외, 개발자가 등록한 빈만 출력
+- `beanDefinition.getRole()` 로 구분 가능
+    - `ROLE_APPLICATION` : 일반적으로 사용자가 정의한 빈
+        - 설정 클래스인 AppConfig 도 사용자가 정의한 빈에 포함
+    - `ROLE_INFRASTRUCTURE` : 스프링이 내부에서 사용하는 빈
+- `getBeanDefinition()`
+    - 빈에 대한 메타데이터 정보는 `ApplicatinoContext` 의 구현체인 `GenericApplicationContext` 에 구현
+    - `AnnotationConfigApplicationContext` 는 `GenericApplicationContext` 를 상속받아 `getBeanDefinition()` 메소드를 가짐
+    - `ApplicationContext` 에는 없음
+
+> #### **참고**
+>JUnit5부터는 테스트 클래스와 메소드에 public 붙이지 않아도 됨
