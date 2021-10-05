@@ -98,4 +98,43 @@ void findApplicationBean() {
     - `ApplicationContext` 에는 없음
 
 > #### **참고**
->JUnit5부터는 테스트 클래스와 메소드에 public 붙이지 않아도 됨
+> JUnit5부터는 테스트 클래스와 메소드에 public 붙이지 않아도 됨
+
+## 4.3 스프링 빈 조회 - 기본
+
+스프링 컨테이너에서 스프링 빈을 찾는 가장 기본적인 조회 방법
+
+- `ac.getBean(빈이름, 타입)`
+    ```Java
+    MemberService memberService = ac.getBean("memberService", MemberService.class);
+    ```
+    ```Java
+    MemberService memberService = ac.getBean("memberService", MemberServiceImpl.class);
+    ```
+    - 구체 타입으로 조회하는 것도 가능
+        - AppConfig의 memberService 메소드의 반환 타입이 MemberService 이긴 하지만<br>
+        스프링 빈 조회 시 스프링 빈에 등록된 객체 인스턴스 타입을 보고 가져오는 것이기 때문에 상관없음
+    - 단, 구체 타입으로 조회 시 유연성이 떨어지기 때문에 좋은 방법은 아님
+- `ac.getBean(타입)`
+    ```Java
+    MemberService memberService = ac.getBean(MemberService.class);
+    ```
+    - 마찬가지로 구체 타입으로 조회 가능
+- `ac.getBean(빈이름)`
+    ```Java
+    MemberService memberService = ac.getBean("memberService");
+    ```
+    - 빈 이름만 가지고 스프링 빈을 조회할 경우, 클래스를 지정하지 않아 Object 타입으로 반환<br>
+    -> 사용 전 사용하고자 하는 타입으로 반드시 캐스팅
+
+<br>
+
+- 조회 대상 스프링 빈이 없으면 예외 발생
+    - `NoSuchBeanDefinitionException: No bean named 'xxxxx' available`
+    - 테스트 방법
+        ```Java
+        // import static org.assertj.core.api.Assertions.*;
+        Assertions.assertThrows(NoSuchBeanDefinitionException.class, () -> ac.getBean("xxxx", MemberService.class));
+        ```
+        - assertThrows(예외클래스, 예외발생코드)
+            - 예외 발생 코드를 실행했을 때, 예외 클래스의 예외가 발생하면 테스트 통과
