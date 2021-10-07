@@ -119,6 +119,7 @@ void findApplicationBean() {
     ```Java
     MemberService memberService = ac.getBean(MemberService.class);
     ```
+    - 동일한 타입의 빈이 2개 이상인 경우 오류 발생
     - 마찬가지로 구체 타입으로 조회 가능
 - `ac.getBean(빈이름)`
     ```Java
@@ -138,3 +139,51 @@ void findApplicationBean() {
         ```
         - assertThrows(예외클래스, 예외발생코드)
             - 예외 발생 코드를 실행했을 때, 예외 클래스의 예외가 발생하면 테스트 통과
+
+## 4.4 스프링 빈 조회 - 동일한 타입이 둘 이상
+
+- 타입으로 조회 시 동일한 타입의 스프링 빈이 둘 이상이면 오류 발생
+    - `NoUniqueBeanDefinitionException`
+    ```Java
+    @Test
+    @DisplayName("타입으로 조회 시 같은 타입이 둘 이상 있으면, 중복 오류가 발생한다")
+    void findBeanByTypeDuplicate() {
+        assertThrows(NoUniqueBeanDefinitionException.class, () ->
+            ac.getBean(MemberRepository.class)
+        );
+    }
+    ```
+    > #### **참고**
+    > 동일한 타입의 빈이 여러 개 있는 것은 이상하지 않음<br>
+    > ex) 생성자 파라미터로 다른 값을 넘겨주어 동일한 객체이지만 다른 설정값(초기값)을 가지는 빈을 여러 개 만들어놓고 사용할 수 있다.
+
+- 빈 이름 지정하여 해결
+    ```Java
+    @Test
+    @DisplayName("타입으로 조회 시 같은 타입이 둘 이상 있으면, 빈 이름을 지정하면 된다")
+    void findBeanByName() {
+        MemberRepository memberRepository1 = ac.getBean("memberRepository1", MemberRepository.class);
+        assertThat(memberRepository1).isInstanceOf(MemberRepository.class);
+    }
+    ```
+
+- 특정 타입의 빈 모두 조회
+    - `ac.getBeansOfType(타입)`
+    ```Java
+    @Test
+    @DisplayName("특정 타입을 모두 조회하기")
+    void findAllBeanByType() {
+        Map<String, MemberRepository> beansOfType = ac.getBeansOfType(MemberRepository.class);
+        for (String key : beansOfType.keySet()) {
+            System.out.println("key = " + key + " value = " + beansOfType.get(key));
+        }
+        System.out.println("beansOfType = " + beansOfType);
+        assertThat(beansOfType.size()).isEqualTo(2);
+    }
+    ```
+<br>
+
+> #### **참고**
+> - 스프링 컨테이너는 여러 개의 설정 클래스를 가질 수 있음
+> - 프로젝트 규모가 커지면 WebConfig 관련, SecurityConfig 관련 등 목적별로 설정 클래스를 분리하여 관리하기도 함
+
