@@ -187,3 +187,76 @@ void findApplicationBean() {
 > - 스프링 컨테이너는 여러 개의 설정 클래스를 가질 수 있음
 > - 프로젝트 규모가 커지면 WebConfig 관련, SecurityConfig 관련 등 목적별로 설정 클래스를 분리하여 관리하기도 함
 
+<br>
+
+## 4.5 스프링 빈 조회 - 상속 관계
+
+### 대원칙
+부모 타입 호출 시 모든 자식 타입도 항상 함께 호출
+- 부모 타입으로 조회 시 자식 타입도 같이 조회
+- Object 타입으로 조회 시 모든 스프링 빈을 조회 (스프링 내부 빈 포함)
+
+<br>
+
+- 부모 타입으로 조회 시 자식이 둘 이상 있으면 중복 오류 발생
+- 빈 이름 지정하여 해결
+- 특정 자식 타입으로 조회하여 해결
+    - 유연성이 떨어지기 때문에 좋은 방법은 아님
+
+<br>
+
+> #### **? 질문**
+> - Test 클래스 안에 테스트에 사용하기 위한 TestConfig 클래스를 inner class로 하여 임시로 만드는데 이때 왜 static으로 선언하는지?
+> ```Java
+> public class Test {
+>     AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(TestConfig.class);
+>
+>     @Configuration
+>     static class TestConfig {
+>         ...
+>     }
+> }
+> ```
+> 
+> <br>
+> 
+> - static이 붙지 않은 inner class는 outer class에 종속<br>
+> inner class를 사용하기 위해서는 outer class를 통해서만 사용 가능
+> - 반면 static이 붙은 inner class는 outer class의 객체 생성 유무와 별개로 생성
+> - TestConfig에 static 붙지 않은 경우
+>   - Test 객체가 생성되어야 TestConfig 사용 가능
+>   - Test 클래스 내에서 TestConfig가 생성되기도 전에 스프링 컨테이너에서 TestConfig 빈 요청
+> - TestConfig에 static 붙은 경우
+>   - Test 클래스와 별개로 TestConfig 객체 생성
+>   - 스프링 컨테이너에서 TestConfig 빈 사용 가능
+> - [링크](https://www.inflearn.com/course/%EC%8A%A4%ED%94%84%EB%A7%81-%ED%95%B5%EC%8B%AC-%EC%9B%90%EB%A6%AC-%EA%B8%B0%EB%B3%B8%ED%8E%B8/lecture/55356?tab=community&speed=1&q=257297)
+
+<br>
+
+## 4.6 BeanFactory와 ApplicationContext
+
+<p align="center"><img src="../../images/BeanFactory-상속-관계.png" width="80%"></p>
+
+### BeanFactory
+- 스프링 컨테이너의 최상위 인터페이스
+- 스프링 빈을 관리하고 조회하는 기능
+- getBean() 제공
+
+### ApplicationContext
+- BeanFactory 상속
+- BeanFactory의 빈 관리 기능 + 애플리케이션 개발 시 필요한 부가기능
+- BeanFactory를 직접 사용할 일 거의 없음. 보통 ApplicationContext 사용
+- BeanFactory나 ApplicationContext를 스프링 컨테이너라 부름
+
+#### **ApplicationContext의 부가기능**
+
+<p align="center"><img src="../../images/ApplicationContext-상속-관계.png" width="80%"></p>
+
+- MessageSource - 메시지 소스를 활용한 국제화 기능
+    - 한국에서 접속하면 한국어로, 영어권에서 접속하면 영어로
+- EnvironmentCapable - 환경변수
+    - 로컬, 개발, 운영 환경 등을 관리
+- ApplicationEventPublisher - 애플리케이션 이벤트
+    - 이벤트 발행 및 구독 모델 지원
+- ResourceLoader - 편리한 리소스 조회
+    - 파일, 클래스패스, 외부 등에서 리소스 조회
