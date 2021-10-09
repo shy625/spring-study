@@ -15,7 +15,7 @@
     - `AnnotationConfigApplicationContext` <- `ApplicationContext` 인터페이스의 구현체
     - 직전에 AppConfig에 @Configuration, @Bean 등을 붙여 설정 클래스로 사용해 스프링 컨테이너를 만든 방식이 이 방식
 
-> #### **참고**
+> #### **# 참고**
 > 정확히는 스프링 컨테이너를 부를 때 BeanFactory와 ApplicationContext로 구분한다.<br>
 > BeanFactory를 직접 사용하는 경우는 거의 없어서 보통 ApplicationContext를 스프링 컨테이너라고 한다.<br>
 > BeanFactory <- ApplicationContext <- 기타 유틸성 기능
@@ -97,7 +97,7 @@ void findApplicationBean() {
     - `AnnotationConfigApplicationContext` 는 `GenericApplicationContext` 를 상속받아 `getBeanDefinition()` 메소드를 가짐
     - `ApplicationContext` 에는 없음
 
-> #### **참고**
+> #### **# 참고**
 > JUnit5부터는 테스트 클래스와 메소드에 public 붙이지 않아도 됨
 
 ## 4.3 스프링 빈 조회 - 기본
@@ -153,7 +153,7 @@ void findApplicationBean() {
         );
     }
     ```
-    > #### **참고**
+    > #### **# 참고**
     > 동일한 타입의 빈이 여러 개 있는 것은 이상하지 않음<br>
     > ex) 생성자 파라미터로 다른 값을 넘겨주어 동일한 객체이지만 다른 설정값(초기값)을 가지는 빈을 여러 개 만들어놓고 사용할 수 있다.
 
@@ -183,7 +183,7 @@ void findApplicationBean() {
     ```
 <br>
 
-> #### **참고**
+> #### **# 참고**
 > - 스프링 컨테이너는 여러 개의 설정 클래스를 가질 수 있음
 > - 프로젝트 규모가 커지면 WebConfig 관련, SecurityConfig 관련 등 목적별로 설정 클래스를 분리하여 관리하기도 함
 
