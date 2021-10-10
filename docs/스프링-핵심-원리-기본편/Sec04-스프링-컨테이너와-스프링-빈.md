@@ -235,9 +235,7 @@ void findApplicationBean() {
 
 ## 4.6 BeanFactory와 ApplicationContext
 
-<!-- <p align="center"><img src="../../images/BeanFactory-상속-관계.png" width="80%"></p> -->
-<p align="center"><img src="../../images/ApplicationContext-상속-관계.png" width="80%"></p>
-
+<p align="center"><img src="../../images/BeanFactory-상속-관계.png" width="80%"></p>
 
 ### BeanFactory
 - 스프링 컨테이너의 최상위 인터페이스
@@ -252,7 +250,7 @@ void findApplicationBean() {
 
 #### **ApplicationContext의 부가기능**
 
-<p align="center"><img src="../../images/BeanFactory-상속-관계.png" width="80%"></p>
+<p align="center"><img src="../../images/ApplicationContext-상속-관계.png" width="80%"></p>
 
 - MessageSource - 메시지 소스를 활용한 국제화 기능
     - 한국에서 접속하면 한국어로, 영어권에서 접속하면 영어로
@@ -268,7 +266,7 @@ void findApplicationBean() {
 ## 4.7 다양한 설정 형식 지원 - 자바 코드, XML
 - 스프링 컨테이너는 자바 코드, XML, Groovy 등 다양한 형식의 설정 정보를 사용할 수 있도록 유연하게 설계되어 있다.
 
-<p align="center"><img src="../../images/설정-형식-상속-관계.png" width="80%"></p>
+<p align="center"><img src="../../images/설정-형식-상속-관계.png" width="80%"></p>
 
 - AnnotationConfigApplicationContext
     - 애노테이션 기반 자바 코드 설정을 사용하는 ApplicationContext의 구현체
