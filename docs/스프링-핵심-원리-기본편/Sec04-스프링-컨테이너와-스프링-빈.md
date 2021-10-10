@@ -235,7 +235,9 @@ void findApplicationBean() {
 
 ## 4.6 BeanFactory와 ApplicationContext
 
-<p align="center"><img src="../../images/BeanFactory-상속-관계.png" width="80%"></p>
+<!-- <p align="center"><img src="../../images/BeanFactory-상속-관계.png" width="80%"></p> -->
+<p align="center"><img src="../../images/ApplicationContext-상속-관계.png" width="80%"></p>
+
 
 ### BeanFactory
 - 스프링 컨테이너의 최상위 인터페이스
