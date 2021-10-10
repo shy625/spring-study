@@ -313,3 +313,62 @@ void xmlAppContext() {
     - class : 스프링 빈 객체 타입 = 반환 타입<br>
     -> `src/main/java` 이후의 경로, 패키지명을 다 써줘야 함
     - constructor-arg : 스프링 빈 생성 시 파라미터로 전달될 것들 = 생성자 파라미터
+
+<br>
+
+## 4.8 스프링 빈 설정 메타 정보 - BeanDefinition
+
+### BeanDefinition
+- 빈 설정 메타정보
+- `@Bean` , `<bean>` 당 하나씩 메타정보 생성
+- 스프링 컨테이너는 메타정보를 기반으로 빈 생성
+
+#### **내부 동작 로직**
+<p align="center"><img src="../../images/BeanDefinition-역할-구현.png" width="80%"></p>
+
+- 스프링은 `BeanDefinition` 이라는 인터페이스(추상화)를 통해 다양한 설정 형식을 지원
+    - 스프링 컨테이너는 자바 코드인지 XML인지 알 필요 없이 BeanDefinition만 알면 ok
+    - 역할 : BeanDefinition<br>
+    - 구현 : 자바 코드(AppConfig.class), XML(appConfig.xml)
+        - 자바 코드를 읽어서 BeanDefinition 생성
+        - XML을 읽어서 BeanDefinition 생성
+
+<p align="center"><img src="../../images/빈-메타정보-생성.png" width="80%"></p>
+
+- 각 `ApplicationContext` 구현체는 설정 파일을 읽고 BeanDefinition을 생성하는 `BeanDefinitionReader` 를 가짐
+    - `AnnotationConfigApplicationContext` 는 `AnnotatedBeanDefinitionReader` 를 사용해서 `AppConfig.class` 를 읽고 `BeanDefinition` 을 생성
+    - XML을 이용하는 경우도 동일
+    - 새로운 형식의 설정 정보를 추가하고자 하는 경우, 그에 맞는 BeanDefinitionReader를 만들어서 BeanDefinition을 생성하면 됨
+
+#### **BeanDefinition 정보**
+- BeanClassName : 생성할 빈의 클래스명 (자바 설정처럼 팩토리 역할의 빈 사용 시에는 없음)
+- factoryBeanName : (팩토리 역할의 빈을 사용할 경우) 이름 ex) appConfig
+- factoryMethodName : (팩토리 역할의 빈을 사용할 경우) 메소드 지정 ex) memberService
+- Scope : 싱글톤 (기본값)
+- lazyInit : 빈 생성 시점 지연 처리 여부, 스프링 컨테이너를 생성할 때 빈을 생성하지 않고 실제 빈을 사용할 때 빈을 생성하는 것
+- InitMethodName : 빈 생성 및 의존관계 적용 완료 뒤, 호출되는 메소드명
+- DestroyMethodName : 빈 생명주기가 끝나고 제거되기 직전, 호출되는 메소드명
+- Constructor arguments, Properties : 의존관계 주입 시 사용 (자바 설정처럼 팩토리 역할의 빈 사용 시에는 없음)
+
+<br>
+
+- 스프링에 빈을 등록하는 방법은 크게 2가지가 있음
+    - 직접 스프링 빈을 등록하는 방법 -> XML
+    - 팩토리 메소드(팩토리 빈)를 통해 등록하는 방법 -> 자바 코드
+
+```Java
+@Test
+@DisplayName("빈 설정 메타정보 확인")
+void findApplicationBean() {
+    String[] beanDefinitionNames = ac.getBeanDefinitionNames();
+    for (String beanDefinitionName : beanDefinitionNames) {
+        BeanDefinition beanDefinition = ac.getBeanDefinition(beanDefinitionName);
+        if(beanDefinition.getRole() == BeanDefinition.ROLE_APPLICATION) {
+            System.out.println("beanDefinition = " + beanDefinitionName + " beanDefinition = " + beanDefinition);
+        }
+    }
+}
+```
+- ApplicationContext에는 BeanDefinition 관련 기능 없음<br>
+구현체에 존재
+- BeanDefinition을 직접 생성해서 스프링 컨테이너에 바로 등록하는 것도 가능 -> 실무에서 BeanDefinition을 직접 만질 일은 거의 없다
