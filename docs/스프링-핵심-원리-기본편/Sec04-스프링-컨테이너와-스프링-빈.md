@@ -260,3 +260,56 @@ void findApplicationBean() {
     - 이벤트 발행 및 구독 모델 지원
 - ResourceLoader - 편리한 리소스 조회
     - 파일, 클래스패스, 외부 등에서 리소스 조회
+
+<br>
+
+## 4.7 다양한 설정 형식 지원 - 자바 코드, XML
+- 스프링 컨테이너는 자바 코드, XML, Groovy 등 다양한 형식의 설정 정보를 사용할 수 있도록 유연하게 설계되어 있다.
+
+<p align="center"><img src="../../images/설정-형식-상속-관계.png" width="80%"></p>
+
+- AnnotationConfigApplicationContext
+    - 애노테이션 기반 자바 코드 설정을 사용하는 ApplicationContext의 구현체
+    - 설정에 AppConfig.class 파일 사용
+- GenericXmlApplicationContext
+    - XML 기반 설정을 사용하는 ApplicationContext 구현체
+    - 설정에 appConfig.xml 사용
+- 기타 임의의 설정 파일을 사용하는 구현체를 직접 만드는 것도 가능
+
+### 애노테이션 기반 자바 코드 설정
+- 앞에서 지금까지 사용한 방식
+- @Configuration, @Bean 등의 애노테이션을 이용하여 자바 코드로 된 설정 파일 (AppConfig.java) 작성
+- `new AnnotationConfigApplicationContext(AppConfig.class)`
+
+### XML 설정
+- 스프링 부트를 많이 사용하는 요즘에는 자주 쓰이지 않는 방식<br>
+(스프링 부트는 애노테이션 기반 설정 방식 이용)
+- 컴파일 없이 빈 설정 정보를 변경할 수 있다는 장점
+- `new GenericXmlApplicationContext("appConfig.xml")`
+#### **XML 설정 사용 코드**
+```Java
+@Test
+void xmlAppContext() {
+    ApplicationContext ac = new GenericXmlApplicationContext("appConfig.xml");
+    MemberService meberService = ac.getBean("memberService", MemberService.class);
+}
+```
+- 스프링 컨텍스트를 생성하는 구현체만 다를 뿐 생성된 스프링 컨텍스트를 사용하는 방법은 애노테이션 방식과 동일
+
+#### **XML 설정 코드**
+```xml
+...
+<bean id="memberService" class="hello.core.member.MemberServiceImpl">
+    <constructor-arg name="memberRepository" ref="memberRepository"/>
+</bean>
+<bean id="memberRepository" class="hello.core.member.MemoryMemberRepository"/>
+...
+```
+- main의 resources 폴더에 위치
+    - 경로 : `src/main/resources/appConfig.xml`
+- 자바 코드로 작성된 AppConfig.java와 거의 비슷
+    - bean : 스프링 빈 대상 = @bean
+    - id : 스프링 빈 이름 = 메소드명
+    - class : 스프링 빈 객체 타입 = 반환 타입<br>
+    -> `src/main/java` 이후의 경로, 패키지명을 다 써줘야 함
+    - constructor-arg : 스프링 빈 생성 시 파라미터로 전달될 것들 = 생성자 파라미터
