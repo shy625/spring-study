@@ -252,7 +252,7 @@ void findApplicationBean() {
 
 #### **ApplicationContext의 부가기능**
 
-<p align="center"><img src="../../images/ApplicationContext-상속-관계.png" width="80%"></p>
+<p align="center"><img src="../../images/BeanFactory-상속-관계.png" width="80%"></p>
 
 - MessageSource - 메시지 소스를 활용한 국제화 기능
     - 한국에서 접속하면 한국어로, 영어권에서 접속하면 영어로
