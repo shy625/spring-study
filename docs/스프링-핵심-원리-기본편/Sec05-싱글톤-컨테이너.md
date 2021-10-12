@@ -206,3 +206,64 @@ public class StatelessService {
     }
 ```
 
+<br>
+
+## 5.5 Configuration과 싱글톤
+
+### 의문점
+
+```Java
+@Configuration
+public class AppConfig {
+    @Bean
+    public MemberService memberService() {
+        return new MemberServiceImpl(memberRepository());
+    }
+
+    @Bean
+    public OrderService orderService() {
+        return new OrderServiceImpl(memberRepository(), discountPolicy());
+    }
+
+    @Bean
+    public MemberRepository memberRepository() {
+        return new MemoryMemberRepository();
+    }
+}
+```
+- memberService 빈을 만드는 코드
+    - `memberRepository()` 호출 -> `new MemoryMemberRepository()` 호출
+- orderService 빈을 만드는 코드
+    - `memberRepository()` 호출 -> `new MemoryMemberRepository()` 호출
+
+#### **Q1**
+memberService 빈을 만들 때와 orderService 빈을 만들 때 `new MemoryMemberRepository()` 가 총 2번 호출되어<br>
+결과적으로 MemoryMemberRepository 객체 인스턴스가 2개 생성되는 것이 아닐까?<br>
+-> 싱글톤이 깨지는 것은 아닐까?
+
+#### **Q2**
+스프링 컨테이너는 @Bean이 붙은 메소드를 각각 호출하여 스프링 빈을 생성
+그렇다면 `memberRepository()` 는 아래와 같이 총 3번 호출되는 것이 아닐까?
+1. @Bean이 붙어있는 `memberRepository()` 호출
+2. memberService() 로직에서 `memberRepository()` 호출
+3. orderService() 로직에서 `memberRepository()` 호출
+
+<br>
+
+### 직접 테스트
+강의자료 참고
+
+<br>
+
+### 결과
+
+#### **A1**
+MemoryMemberRepository 객체 인스턴스는 단 1개만 생성되고,<br>
+MemberService, OrderService, MemberRepository 객체는 모두 동일한 MemoryMemberRepository 객체 인스턴스를 가진다.<br>
+-> 싱글톤 유지!
+
+#### **A2**
+memberService(), orderService(), `memberRepository()` 는 각각 1번씩만 호출된다.<br>
+-> `memberRepository()` 는 단 1번만 호출!
+
+new로 객체를 생성하도록 자바 코드로 작성되어 있는데 어떻게 이를 무시하고 1번만 호출하는 걸까?
