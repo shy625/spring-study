@@ -94,7 +94,6 @@ final로 선언하여 변경 불가
 > - [링크1](https://www.inflearn.com/course/%EC%8A%A4%ED%94%84%EB%A7%81-%ED%95%B5%EC%8B%AC-%EC%9B%90%EB%A6%AC-%EA%B8%B0%EB%B3%B8%ED%8E%B8/lecture/55362?tab=community&speed=1.25&q=123791)
 > - [링크2](https://www.inflearn.com/course/%EC%8A%A4%ED%94%84%EB%A7%81-%ED%95%B5%EC%8B%AC-%EC%9B%90%EB%A6%AC-%EA%B8%B0%EB%B3%B8%ED%8E%B8/lecture/55363?tab=community&speed=1.25&q=104609)
 
-
 <br>
 
 ## 5.3 싱글톤 컨테이너
@@ -124,3 +123,86 @@ final로 선언하여 변경 불가
 >   - HTTP Session의 생명주기와 맞추기
 >   - 기타 등등
 > - 빈 스코프에서 자세한 내용 설명
+
+<br>
+
+## 5.4 싱글톤 방식의 주의점
+
+### Stateless 한 설계
+- 싱글톤 방식은 여러 클라이언트가 하나의 동일한 싱글톤 객체 인스턴스를 공유하기 때문에 **싱글톤 객체는 상태를 유지(stateful)하게 설계하면 안된다!!!**
+- 무상태(stateless)로 설계
+    - 특정 클라이언트에 의존적인 멤버 변수 X
+    - 특정 클라이언트가 값을 변경할 수 있는 멤버 변수 X
+    - 가급적 읽기만 가능
+    - 필드 대신에 공유되지 않는 지역변수, 파라미터, ThreadLocal 등을 사용
+- 스프링 빈의 멤버 변수에 공유 값을 설정 -> **큰 장애 발생 위험!!!**
+
+<br>
+
+#### **Stateful한 설계의 예시**
+
+```Java
+public class StatefulService {
+    // 상태를 유지하는 멤버 변수(필드) -> 싱글톤 객체를 사용하는 모든 곳에서 공통!
+    private int price;
+
+    // 상태값을 모든 곳에서 공유되는 멤버 변수(필드)에 저장
+    public void order(String name, int price) {
+        System.out.println("name = " + name + ", price = " + price);
+        this.price = price; // 문제 발생!!
+    }
+
+    public int getPrice() {
+        return price;
+    }
+}
+
+...
+
+    @Test
+    void statefulServiceSingleton {
+        ApplicationContext ac = new AnnotationConfigApplicationContext(TestConfig.class);
+
+        StatefulService s1 = ac.getBean("statefulService", StatefulService.class);
+        StatefulService s2 = ac.getBean("statefulService", StatefulService.class);
+
+        // ThreadA : userA 10000 주문
+        s1.order("userA", 10000);
+        // ThreadB : userB 20000 주문
+        s2.order("userB", 20000);
+
+        // 기댓값 : 10000 -> 결과값 : 20000
+        int price = s1.getPrice();
+    }
+```
+
+#### **Stateless한 설계의 예시**
+
+```Java
+public class StatelessService {
+    // 상태값을 모든 곳에서 공유되는 멤버 변수(필드)에 저장하지 않고 메소드의 지역변수(파라미터)로만 사용
+    public int order(String name, int price) {
+        System.out.println("name = " + name + ", price = " + price);
+        return price;
+    }
+}
+
+...
+
+    @Test
+    void statelessServiceSingleton {
+        ApplicationContext ac = new AnnotationConfigApplicationContext(TestConfig.class);
+
+        StatefulService s1 = ac.getBean("statefulService", StatefulService.class);
+        StatefulService s2 = ac.getBean("statefulService", StatefulService.class);
+
+        // ThreadA : userA 10000 주문
+        int priceA = s1.order("userA", 10000);
+        // ThreadB : userB 20000 주문
+        int priceB = s2.order("userB", 20000);
+
+        // 기댓값 : 10000 -> 결과값 : 10000
+        priceA;
+    }
+```
+
