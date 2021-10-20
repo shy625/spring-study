@@ -267,3 +267,83 @@ memberService(), orderService(), `memberRepository()` 는 각각 1번씩만 호�
 -> `memberRepository()` 는 단 1번만 호출!
 
 new로 객체를 생성하도록 자바 코드로 작성되어 있는데 어떻게 이를 무시하고 1번만 호출하는 걸까?
+
+<br>
+
+## 5.6 @Configuration과 바이트코드 조작의 마법
+
+스프링은 싱글톤 레지스트리이기 때문에 스프링 빈이 싱글톤이 되도록 보장해주어야 한다. 하지만 스프링이 자바 코드까지 어떻게 할 수는 없다.<br>
+스프링은 이를 클래스의 바이트코드를 직접 조작하는 라이브러리를 사용하여 해결한다.
+
+### @Configuration 과 CGLIB
+
+```Java
+@Test
+void configurationDeep() {
+    ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+
+    AppConfig bean = ac.getBean(AppConfig.class);
+
+    System.out.println("bean = " + bean.getClass());
+}
+```
+- AppConfig의 클래스 정보 출력 시 원래라면 아래와 같이 출력
+    - `class hello.core.AppConfig`
+- 실제 결과는 아래와 같이 **CGLIB**가 붙어서 출력
+    - `class hello.core.AppConfig$$EnhancerBySpringCGLIB$$713ccfe9`
+
+> #### **# 참고**
+> `AnnotationConfigApplicationContext` 에 파라미터로 넘긴 값은 스프링 빈으로 자동 등록된다.
+> 따라서 `@Bean` 이 붙지 않은 `AppConfig` 도 파라미터로 넘겨줬기 때문에 스프링 빈으로 등록된다.
+
+<br>
+
+<p align="center"><img src="../../images/CGLIB-동작.png" width="80%"></p>
+
+- 스프링은 `@Configuration` 이 붙은 클래스에 대해 **CGLIB 라는 바이트코드 조작 라이브러리**를 사용하여 해당 클래스를 상속받는 새로운 클래스를 만들고 그 클래스를 스프링 빈으로 등록한다.
+    - CGLIB를 이용해 `AppConfig` 를 상속받는 `AppConfig@CGLIB`  라는 새로운 클래스 생성
+    - appConfig라는 빈 이름에 대해 `AppConfig` 인스턴스 대신 `AppConfig@CGLIB` 인스턴스를 스프링 컨테이너에 등록
+
+<br>
+
+#### **AppConfig@CGLIB 예상 코드**
+
+```Java
+// AppConfig의 기존 memberRepository() 메소드를 override
+@Bean
+public MemberRepository memberRepository() {
+    if(memoryMemberRepository가 이미 스프링 컨테이너에 등록되어 있으면) {
+        return 스프링 컨테이너에서 찾아서 반환;
+    } else {    // 스프링 컨테이너에 없으면
+        AppConfig의 기존 로직을 호출해서 MemoryMemberRepository를 생성하고 스프링 컨테이너에 등록
+        return 새로 생성하여 스프링 컨테이너에 등록한 객체를 반환;
+    }
+}
+```
+- `@Bean` 이 붙은 메소드마다 이미 스프링 빈이 존재하면 존재하는 빈을 반환하고, 스프링 빈이 없으면 생성해서 스프링 빈으로 등록하고 반환하는 코드를 동적 생성<br>
+-> 이를 통해 싱글톤 보장
+
+> #### **# 참고**
+> `AppConfig@CGLIB` 는 `AppConfig` 의 자식 타입이므로 `AppConfig` 타입으로 조회 가능
+
+### @Configuration 이 없다면?
+AppConfig 에 `@Configuration` 을 붙이지 않고 각 메소드에 `@Bean` 만 붙인 채로 실행한다면 어떻게 될까?
+
+#### **결과**
+
+- AppConfig의 클래스 정보
+    - `hello.core.AppConfig`
+- `memberRepository()` 메소드 3번 호출
+- `memberService`, `orderService`, `memberRepository`가 모두 다른 `MemoryMemberRepository` 객체를 가짐
+    - memberRepository의 MemoryMemberRepository는 스프링 빈
+    - memberService, orderService의 MemoryMemberRepository는 그냥 생성자를 통해 생성된 자바 객체 (스프링 빈 X)
+    > #### **# 참고**
+    > `@Autowired` 를 사용해서 같은 스프링 빈을 사용하도록 연결할 수 있다. 추후 자세한 설명
+
+따라서
+- `@Bean` 만 사용 시에도 스프링 빈으로 등록되지만 싱글톤을 보장하지는 않음
+- 스프링 설정 정보는 항상 `@Configuration` 을 사용하는 것이 좋음
+
+> #### **# 참고**
+> `@Configuration` 동작과 관련된 다른 수강자의 질문 링크
+> - [링크](https://www.inflearn.com/questions/283508)
